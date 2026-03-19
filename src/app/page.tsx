@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useId, useState } from "react";
+import { FormEvent, useEffect, useId, useState } from "react";
 
 type MessageRole = "assistant" | "user";
 
@@ -42,8 +42,7 @@ type PlannerState = {
   phases: Phase[];
 };
 
-type RoadmapResponse = {
-  assistantMessage: string;
+type RoadmapPayload = {
   config: PlanConfig;
   phases: Array<{
     title: string;
@@ -55,6 +54,21 @@ type RoadmapResponse = {
       weekLabel: string;
     }>;
   }>;
+};
+
+type AssistantDecision = {
+  assistantMessage: string;
+  mode: "chat" | "clarify" | "create_roadmap" | "update_roadmap";
+  readiness: "insufficient" | "sufficient";
+  missingInformation: string[];
+  roadmap: RoadmapPayload | null;
+};
+
+type PendingRoadmap = {
+  mode: "create_roadmap" | "update_roadmap";
+  config: PlanConfig;
+  phases: Phase[];
+  message: string;
 };
 
 const topicTemplates = [
@@ -108,7 +122,7 @@ function formatPhaseMetrics(tasks: Task[]) {
   return { completed, total, percent };
 }
 
-function hydratePhases(phases: RoadmapResponse["phases"]): Phase[] {
+function hydratePhases(phases: RoadmapPayload["phases"]): Phase[] {
   return phases.map((phase) => ({
     id: createId("phase"),
     title: phase.title,
@@ -130,8 +144,27 @@ export default function Home() {
   const [draft, setDraft] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [animateRoadmap, setAnimateRoadmap] = useState(false);
+  const [pendingRoadmap, setPendingRoadmap] = useState<PendingRoadmap | null>(null);
   const metrics = formatPercent(planner.phases);
   const hasRoadmap = planner.phases.length > 0;
+  const displayedRoadmap = pendingRoadmap
+    ? { config: pendingRoadmap.config, phases: pendingRoadmap.phases }
+    : { config: planner.config, phases: planner.phases };
+  const showingPreview = pendingRoadmap !== null;
+  const shouldShowRoadmapPanel = displayedRoadmap.phases.length > 0;
+
+  useEffect(() => {
+    if (!animateRoadmap) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setAnimateRoadmap(false);
+    }, 900);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [animateRoadmap]);
 
   async function submitPrompt(rawInput: string) {
     const input = rawInput.trim();
@@ -143,6 +176,35 @@ export default function Home() {
       ...planner.messages,
       { id: createId("message"), role: "user" as const, text: input },
     ];
+    const roadmapContext = pendingRoadmap
+      ? {
+          config: pendingRoadmap.config,
+          phases: pendingRoadmap.phases.map((phase) => ({
+            title: phase.title,
+            summary: phase.summary,
+            focus: phase.focus,
+            tasks: phase.tasks.map((task) => ({
+              title: task.title,
+              notes: task.notes,
+              weekLabel: task.weekLabel,
+              done: task.done,
+            })),
+          })),
+        }
+      : {
+          config: planner.config,
+          phases: planner.phases.map((phase) => ({
+            title: phase.title,
+            summary: phase.summary,
+            focus: phase.focus,
+            tasks: phase.tasks.map((task) => ({
+              title: task.title,
+              notes: task.notes,
+              weekLabel: task.weekLabel,
+              done: task.done,
+            })),
+          })),
+        };
 
     setPlanner((current) => ({
       ...current,
@@ -160,34 +222,20 @@ export default function Home() {
         },
         body: JSON.stringify({
           messages: nextMessages.map(({ role, text }) => ({ role, text })),
-          currentRoadmap: {
-            config: planner.config,
-            phases: planner.phases.map((phase) => ({
-              title: phase.title,
-              summary: phase.summary,
-              focus: phase.focus,
-              tasks: phase.tasks.map((task) => ({
-                title: task.title,
-                notes: task.notes,
-                weekLabel: task.weekLabel,
-                done: task.done,
-              })),
-            })),
-          },
+          currentRoadmap: roadmapContext,
         }),
       });
 
       const payload = (await response.json()) as
-        | RoadmapResponse
+        | AssistantDecision
         | { error?: string };
 
-      if (!response.ok || !("config" in payload) || !("phases" in payload)) {
+      if (!response.ok || !("mode" in payload)) {
         throw new Error(payload.error || "Unable to generate roadmap right now.");
       }
 
       setPlanner((current) => ({
-        config: payload.config,
-        phases: hydratePhases(payload.phases),
+        ...current,
         messages: [
           ...current.messages,
           {
@@ -197,6 +245,19 @@ export default function Home() {
           },
         ],
       }));
+
+      if (
+        (payload.mode === "create_roadmap" || payload.mode === "update_roadmap") &&
+        payload.roadmap
+      ) {
+        setPendingRoadmap({
+          mode: payload.mode,
+          config: payload.roadmap.config,
+          phases: hydratePhases(payload.roadmap.phases),
+          message: payload.assistantMessage,
+        });
+        setAnimateRoadmap(true);
+      }
     } catch (submissionError) {
       const message =
         submissionError instanceof Error
@@ -325,19 +386,43 @@ export default function Home() {
     setDraft("");
     setError(null);
     setIsSubmitting(false);
+    setPendingRoadmap(null);
+  }
+
+  function applyPendingRoadmap() {
+    if (!pendingRoadmap) {
+      return;
+    }
+
+    setPlanner((current) => ({
+      ...current,
+      config: pendingRoadmap.config,
+      phases: pendingRoadmap.phases,
+    }));
+    setPendingRoadmap(null);
+  }
+
+  function discardPendingRoadmap() {
+    setPendingRoadmap(null);
   }
 
   return (
     <main className="roadmap-shell">
-      <section className={`workspace-grid ${hasRoadmap ? "" : "workspace-grid-single"}`}>
-        <aside className="panel chat-panel">
+      <section
+        className={`workspace-grid ${
+          shouldShowRoadmapPanel ? "" : "workspace-grid-single"
+        }`}
+      >
+        <aside className={`panel chat-panel ${isSubmitting ? "panel-busy" : ""}`}>
           <div className="panel-header">
             <div>
               <h2>Roadmap Chat</h2>
               <p className="panel-meta">
-                {hasRoadmap
-                  ? `${planner.config.topic} · ${planner.config.weeks} weeks`
-                  : "Describe what you want to learn and Gemini will draft the roadmap."}
+                {showingPreview
+                  ? "A roadmap proposal is ready for review."
+                  : hasRoadmap
+                    ? `${planner.config.topic} · ${planner.config.weeks} weeks`
+                    : "Chat normally, or ask Gemini to build a roadmap when you're ready."}
               </p>
             </div>
             <button className="ghost-button" onClick={resetPlanner} type="button">
@@ -357,19 +442,34 @@ export default function Home() {
                 <p>{message.text}</p>
               </article>
             ))}
+            {isSubmitting ? (
+              <article className="message-bubble message-assistant message-loading">
+                <span className="message-role">Planner</span>
+                <div className="loading-line-group" aria-label="Generating roadmap">
+                  <span className="loading-spinner" aria-hidden="true" />
+                  <span className="loading-line short" />
+                  <span className="loading-line" />
+                </div>
+              </article>
+            ) : null}
           </div>
 
           <form className="composer" onSubmit={handleSubmit}>
             <label className="sr-only" htmlFor={composerId}>
               Chat with the roadmap planner
             </label>
-            <textarea
-              id={composerId}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Example: Build me a beginner roadmap for data analysis in 10 weeks, then make it project-heavy."
-              rows={4}
-            />
+            <div className="composer-input-shell">
+              <textarea
+                id={composerId}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder="Example: Build me a beginner roadmap for data analysis in 10 weeks, then make it project-heavy."
+                rows={4}
+              />
+              <button className="primary-button composer-submit" disabled={isSubmitting} type="submit">
+                {isSubmitting ? "Generating..." : "Send"}
+              </button>
+            </div>
             <div className="composer-footer">
               <span>
                 Try topics like{" "}
@@ -381,30 +481,50 @@ export default function Home() {
                 ))}
                 .
               </span>
-              <button className="primary-button" disabled={isSubmitting} type="submit">
-                {isSubmitting ? "Generating..." : "Update roadmap"}
-              </button>
+              <span className="composer-status">
+                {isSubmitting ? "Gemini is shaping the roadmap..." : "Roadmaps update from the conversation."}
+              </span>
             </div>
             {error ? <p className="form-error">{error}</p> : null}
           </form>
         </aside>
 
-        {hasRoadmap ? (
-          <section className="panel roadmap-panel">
+        {shouldShowRoadmapPanel ? (
+          <section
+            className={`panel roadmap-panel ${animateRoadmap ? "roadmap-reveal" : ""} ${
+              isSubmitting ? "panel-busy" : ""
+            }`}
+          >
             <div className="panel-header">
               <div>
-                <h2>Trackable Roadmap</h2>
+                <h2>{showingPreview ? "Roadmap Preview" : "Trackable Roadmap"}</h2>
                 <p className="panel-meta">
-                  {metrics.completed} of {metrics.total} tasks complete · {metrics.percent}%
+                  {showingPreview
+                    ? pendingRoadmap.mode === "create_roadmap"
+                      ? "Review this draft before creating the roadmap."
+                      : "Review these edits before updating your roadmap."
+                    : `${metrics.completed} of ${metrics.total} tasks complete · ${metrics.percent}%`}
                 </p>
               </div>
-              <button className="secondary-button" onClick={addPhase} type="button">
-                Add phase
-              </button>
+              {showingPreview ? (
+                <div className="preview-actions">
+                  <button className="secondary-button" onClick={discardPendingRoadmap} type="button">
+                    Keep chatting
+                  </button>
+                  <button className="primary-button" onClick={applyPendingRoadmap} type="button">
+                    {pendingRoadmap.mode === "create_roadmap" ? "Create roadmap" : "Apply changes"}
+                  </button>
+                </div>
+              ) : hasRoadmap ? (
+                <button className="secondary-button" onClick={addPhase} type="button">
+                  Add phase
+                </button>
+              ) : null}
             </div>
 
-            <div className="phase-list">
-              {planner.phases.map((phase, index) => (
+            {displayedRoadmap.phases.length > 0 ? (
+              <div className={`phase-list ${isSubmitting ? "phase-list-dimmed" : ""}`}>
+                {displayedRoadmap.phases.map((phase, index) => (
                 <article className="phase-card" key={phase.id}>
                   {(() => {
                     const phaseMetrics = formatPhaseMetrics(phase.tasks);
@@ -414,22 +534,19 @@ export default function Home() {
                         <div className="phase-head">
                           <div className="phase-heading">
                             <span className="phase-index">Phase {index + 1}</span>
-                            <div className="phase-stat-row">
-                              <span className="phase-pill">
-                                {phaseMetrics.completed}/{phaseMetrics.total} tasks
-                              </span>
-                              <span className="phase-pill phase-pill-strong">
-                                {phaseMetrics.percent}% complete
-                              </span>
-                            </div>
+                            <p className="phase-meta">
+                              {phaseMetrics.completed}/{phaseMetrics.total} tasks complete · {phaseMetrics.percent}%
+                            </p>
                           </div>
-                          <button
-                            className="ghost-button"
-                            onClick={() => addTask(phase.id)}
-                            type="button"
-                          >
-                            Add task
-                          </button>
+                          {showingPreview ? null : (
+                            <button
+                              className="ghost-button"
+                              onClick={() => addTask(phase.id)}
+                              type="button"
+                            >
+                              Add task
+                            </button>
+                          )}
                         </div>
 
                         <div className="phase-progress-track" aria-hidden="true">
@@ -439,28 +556,38 @@ export default function Home() {
                           />
                         </div>
 
-                        <input
-                          className="phase-title"
-                          value={phase.title}
-                          onChange={(event) =>
-                            updatePhase(phase.id, "title", event.target.value)
-                          }
-                        />
-                        <textarea
-                          className="phase-summary"
-                          value={phase.summary}
-                          onChange={(event) =>
-                            updatePhase(phase.id, "summary", event.target.value)
-                          }
-                          rows={2}
-                        />
-                        <input
-                          className="phase-focus"
-                          value={phase.focus}
-                          onChange={(event) =>
-                            updatePhase(phase.id, "focus", event.target.value)
-                          }
-                        />
+                        {showingPreview ? (
+                          <>
+                            <h3 className="phase-title">{phase.title}</h3>
+                            <p className="phase-summary">{phase.summary}</p>
+                            <p className="phase-focus">{phase.focus}</p>
+                          </>
+                        ) : (
+                          <>
+                            <input
+                              className="phase-title"
+                              value={phase.title}
+                              onChange={(event) =>
+                                updatePhase(phase.id, "title", event.target.value)
+                              }
+                            />
+                            <textarea
+                              className="phase-summary"
+                              value={phase.summary}
+                              onChange={(event) =>
+                                updatePhase(phase.id, "summary", event.target.value)
+                              }
+                              rows={2}
+                            />
+                            <input
+                              className="phase-focus"
+                              value={phase.focus}
+                              onChange={(event) =>
+                                updatePhase(phase.id, "focus", event.target.value)
+                              }
+                            />
+                          </>
+                        )}
 
                         <div className="task-list">
                           {phase.tasks.map((task) => (
@@ -469,35 +596,47 @@ export default function Home() {
                               key={task.id}
                             >
                               <div className="task-check-wrap">
-                                <input
-                                  checked={task.done}
-                                  onChange={() => toggleTask(phase.id, task.id)}
-                                  type="checkbox"
-                                />
-                                <span className="task-check-visual" aria-hidden="true" />
+                                {showingPreview ? (
+                                  <span className="task-check-visual" aria-hidden="true" />
+                                ) : (
+                                  <input
+                                    checked={task.done}
+                                    onChange={() => toggleTask(phase.id, task.id)}
+                                    type="checkbox"
+                                  />
+                                )}
+                                {showingPreview ? null : (
+                                  <span className="task-check-visual" aria-hidden="true" />
+                                )}
                               </div>
                               <div className="task-body">
                                 <div className="task-topline">
-                                  <span className="task-status">
-                                    {task.done ? "Done" : "In progress"}
-                                  </span>
                                   <span className="task-week">{task.weekLabel}</span>
                                 </div>
-                                <input
-                                  className="task-title"
-                                  value={task.title}
-                                  onChange={(event) =>
-                                    updateTask(phase.id, task.id, "title", event.target.value)
-                                  }
-                                />
-                                <textarea
-                                  className="task-notes"
-                                  rows={2}
-                                  value={task.notes}
-                                  onChange={(event) =>
-                                    updateTask(phase.id, task.id, "notes", event.target.value)
-                                  }
-                                />
+                                {showingPreview ? (
+                                  <>
+                                    <p className="task-title task-title-preview">{task.title}</p>
+                                    <p className="task-notes">{task.notes}</p>
+                                  </>
+                                ) : (
+                                  <>
+                                    <input
+                                      className="task-title"
+                                      value={task.title}
+                                      onChange={(event) =>
+                                        updateTask(phase.id, task.id, "title", event.target.value)
+                                      }
+                                    />
+                                    <textarea
+                                      className="task-notes"
+                                      rows={2}
+                                      value={task.notes}
+                                      onChange={(event) =>
+                                        updateTask(phase.id, task.id, "notes", event.target.value)
+                                      }
+                                    />
+                                  </>
+                                )}
                               </div>
                             </label>
                           ))}
@@ -506,8 +645,36 @@ export default function Home() {
                     );
                   })()}
                 </article>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="phase-list phase-skeleton-list" aria-hidden="true">
+                {Array.from({ length: 3 }, (_, index) => (
+                  <article className="phase-card phase-card-skeleton" key={`skeleton-${index}`}>
+                    <div className="skeleton-line skeleton-line-xs" />
+                    <div className="skeleton-line skeleton-line-lg" />
+                    <div className="skeleton-line skeleton-line-sm" />
+                    <div className="phase-progress-track skeleton-track">
+                      <div className="phase-progress-bar skeleton-bar" style={{ width: `${40 + index * 15}%` }} />
+                    </div>
+                    <div className="task-list">
+                      {Array.from({ length: 3 }, (_, taskIndex) => (
+                        <div className="task-card task-card-skeleton" key={`task-skeleton-${taskIndex}`}>
+                          <span className="task-check-visual" />
+                          <div className="task-body">
+                            <div className="task-topline">
+                              <span className="skeleton-pill skeleton-pill-small" />
+                            </div>
+                            <div className="skeleton-line skeleton-line-md" />
+                            <div className="skeleton-line skeleton-line-sm" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         ) : null}
       </section>

@@ -32,7 +32,7 @@ type ClientRoadmap = {
   phases: ClientPhase[];
 };
 
-type OpenAIResponse = {
+type GeminiResponse = {
   candidates?: Array<{
     content?: {
       parts?: Array<{
@@ -45,14 +45,10 @@ type OpenAIResponse = {
   };
 };
 
-const roadmapSchema = {
+const roadmapPayloadSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    assistantMessage: {
-      type: "string",
-      minLength: 1,
-    },
     config: {
       type: "object",
       additionalProperties: false,
@@ -113,10 +109,46 @@ const roadmapSchema = {
       },
     },
   },
-  required: ["assistantMessage", "config", "phases"],
+  required: ["config", "phases"],
 } as const;
 
-function extractStructuredText(response: OpenAIResponse) {
+const responseSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    assistantMessage: {
+      type: "string",
+      minLength: 1,
+    },
+    mode: {
+      type: "string",
+      enum: ["chat", "clarify", "create_roadmap", "update_roadmap"],
+    },
+    readiness: {
+      type: "string",
+      enum: ["insufficient", "sufficient"],
+    },
+    missingInformation: {
+      type: "array",
+      items: {
+        type: "string",
+        minLength: 1,
+      },
+    },
+    roadmap: {
+      anyOf: [roadmapPayloadSchema, { type: "null" }],
+    },
+  },
+  required: [
+    "assistantMessage",
+    "mode",
+    "readiness",
+    "missingInformation",
+    "roadmap",
+  ],
+} as const;
+
+function extractStructuredText(response: GeminiResponse) {
   for (const candidate of response.candidates ?? []) {
     for (const part of candidate.content?.parts ?? []) {
       if (part.text) {
@@ -165,35 +197,35 @@ export async function POST(request: Request) {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
-      method: "POST",
-      headers: {
-        "x-goog-api-key": process.env.GEMINI_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text:
-                  "You are a roadmap planner. Produce a clean, realistic, trackable learning roadmap. If the user asks to revise an existing roadmap, preserve the intent and update the structure instead of starting over unnecessarily. Return concise but useful task notes. Keep the roadmap practical, with specific phases and tasks that are easy to track.",
-              },
-              {
-                text: `Conversation:\n${JSON.stringify(messages, null, 2)}\n\nCurrent roadmap:\n${JSON.stringify(currentRoadmap, null, 2)}`,
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseJsonSchema: roadmapSchema,
+        method: "POST",
+        headers: {
+          "x-goog-api-key": process.env.GEMINI_API_KEY,
+          "Content-Type": "application/json",
         },
-      }),
-    },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text:
+                    "You are the brain of a chat-first learning planner whose only specialty is producing complete, high-value learning roadmaps. Be conservative: an incomplete roadmap is worse than asking more questions. Default to normal conversation for greetings, small talk, side questions, and brainstorming. Use mode 'clarify' whenever any critical information needed for a quality roadmap is still missing. Only use 'create_roadmap' or 'update_roadmap' when readiness is 'sufficient' and missingInformation is empty. If readiness is insufficient, roadmap must be null. Clarifying replies should ask the most important missing questions first, grouped tightly and clearly.\n\nMinimum checklist before roadmap creation usually includes: target goal or use case, current level, available time or target duration, preferred learning style or emphasis, constraints, and any topic-specific tool choices that materially affect the roadmap.\n\nTopic-specific completeness rules:\n- DevOps roadmaps are incomplete without clarifying cloud provider preference or whether the learner wants cloud-agnostic guidance. Also clarify major platform/tooling preferences when relevant, such as containers/orchestration, CI/CD, IaC, or Linux focus.\n- Frontend roadmaps should clarify framework preference if the user likely cares.\n- Data roadmaps should clarify analysis vs ML vs data engineering focus and preferred language when relevant.\n- Design roadmaps should clarify UX vs UI vs product design focus when relevant.\n- Backend roadmaps should clarify language or framework preference when relevant.\n\nWhen clarifying, return missingInformation as a concrete list of unresolved items. When chatting normally, readiness should be insufficient, missingInformation should be empty, and roadmap should be null. When proposing a roadmap, make it practical, specific, and tailored to the gathered constraints.",
+                },
+                {
+                  text: `Conversation:\n${JSON.stringify(messages, null, 2)}\n\nCurrent roadmap:\n${JSON.stringify(currentRoadmap, null, 2)}`,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseJsonSchema: responseSchema,
+          },
+        }),
+      },
     );
 
-    const payload = (await response.json()) as OpenAIResponse;
+    const payload = (await response.json()) as GeminiResponse;
 
     if (!response.ok) {
       return NextResponse.json(

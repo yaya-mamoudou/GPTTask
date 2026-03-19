@@ -348,7 +348,7 @@ function createAssistantReply(config: PlanConfig, previous: PlanConfig | null) {
 
 function buildInitialState(): PlannerState {
   const config: PlanConfig = {
-    topic: "Product Design",
+    topic: "",
     level: "beginner",
     weeks: 8,
     phases: 4,
@@ -359,7 +359,7 @@ function buildInitialState(): PlannerState {
 
   return {
     config,
-    phases: generatePlan(config),
+    phases: [],
     messages: [
       {
         id: createId("message"),
@@ -383,6 +383,7 @@ export default function Home() {
   const [planner, setPlanner] = useState<PlannerState>(buildInitialState);
   const [draft, setDraft] = useState("");
   const metrics = formatPercent(planner.phases);
+  const hasRoadmap = planner.phases.length > 0;
 
   function submitPrompt(rawInput: string) {
     const input = rawInput.trim();
@@ -521,13 +522,15 @@ export default function Home() {
 
   return (
     <main className="roadmap-shell">
-      <section className="workspace-grid">
+      <section className={`workspace-grid ${hasRoadmap ? "" : "workspace-grid-single"}`}>
         <aside className="panel chat-panel">
           <div className="panel-header">
             <div>
               <h2>Roadmap Chat</h2>
               <p className="panel-meta">
-                {planner.config.topic} · {planner.config.weeks} weeks
+                {hasRoadmap
+                  ? `${planner.config.topic} · ${planner.config.weeks} weeks`
+                  : "Describe what you want to learn and I’ll turn it into a roadmap."}
               </p>
             </div>
             <button className="ghost-button" onClick={resetPlanner} type="button">
@@ -578,92 +581,94 @@ export default function Home() {
           </form>
         </aside>
 
-        <section className="panel roadmap-panel">
-          <div className="panel-header">
-            <div>
-              <h2>Trackable Roadmap</h2>
-              <p className="panel-meta">
-                {metrics.completed} of {metrics.total} tasks complete · {metrics.percent}%
-              </p>
+        {hasRoadmap ? (
+          <section className="panel roadmap-panel">
+            <div className="panel-header">
+              <div>
+                <h2>Trackable Roadmap</h2>
+                <p className="panel-meta">
+                  {metrics.completed} of {metrics.total} tasks complete · {metrics.percent}%
+                </p>
+              </div>
+              <button className="secondary-button" onClick={addPhase} type="button">
+                Add phase
+              </button>
             </div>
-            <button className="secondary-button" onClick={addPhase} type="button">
-              Add phase
-            </button>
-          </div>
 
-          <div className="phase-list">
-            {planner.phases.map((phase, index) => (
-              <article className="phase-card" key={phase.id}>
-                <div className="phase-head">
-                  <span className="phase-index">Phase {index + 1}</span>
-                  <button
-                    className="ghost-button"
-                    onClick={() => addTask(phase.id)}
-                    type="button"
-                  >
-                    Add task
-                  </button>
-                </div>
-
-                <input
-                  className="phase-title"
-                  value={phase.title}
-                  onChange={(event) =>
-                    updatePhase(phase.id, "title", event.target.value)
-                  }
-                />
-                <textarea
-                  className="phase-summary"
-                  value={phase.summary}
-                  onChange={(event) =>
-                    updatePhase(phase.id, "summary", event.target.value)
-                  }
-                  rows={2}
-                />
-                <input
-                  className="phase-focus"
-                  value={phase.focus}
-                  onChange={(event) =>
-                    updatePhase(phase.id, "focus", event.target.value)
-                  }
-                />
-
-                <div className="task-list">
-                  {phase.tasks.map((task) => (
-                    <label
-                      className={`task-card ${task.done ? "task-done" : ""}`}
-                      key={task.id}
+            <div className="phase-list">
+              {planner.phases.map((phase, index) => (
+                <article className="phase-card" key={phase.id}>
+                  <div className="phase-head">
+                    <span className="phase-index">Phase {index + 1}</span>
+                    <button
+                      className="ghost-button"
+                      onClick={() => addTask(phase.id)}
+                      type="button"
                     >
-                      <input
-                        checked={task.done}
-                        onChange={() => toggleTask(phase.id, task.id)}
-                        type="checkbox"
-                      />
-                      <div className="task-body">
+                      Add task
+                    </button>
+                  </div>
+
+                  <input
+                    className="phase-title"
+                    value={phase.title}
+                    onChange={(event) =>
+                      updatePhase(phase.id, "title", event.target.value)
+                    }
+                  />
+                  <textarea
+                    className="phase-summary"
+                    value={phase.summary}
+                    onChange={(event) =>
+                      updatePhase(phase.id, "summary", event.target.value)
+                    }
+                    rows={2}
+                  />
+                  <input
+                    className="phase-focus"
+                    value={phase.focus}
+                    onChange={(event) =>
+                      updatePhase(phase.id, "focus", event.target.value)
+                    }
+                  />
+
+                  <div className="task-list">
+                    {phase.tasks.map((task) => (
+                      <label
+                        className={`task-card ${task.done ? "task-done" : ""}`}
+                        key={task.id}
+                      >
                         <input
-                          className="task-title"
-                          value={task.title}
-                          onChange={(event) =>
-                            updateTask(phase.id, task.id, "title", event.target.value)
-                          }
+                          checked={task.done}
+                          onChange={() => toggleTask(phase.id, task.id)}
+                          type="checkbox"
                         />
-                        <textarea
-                          className="task-notes"
-                          rows={2}
-                          value={task.notes}
-                          onChange={(event) =>
-                            updateTask(phase.id, task.id, "notes", event.target.value)
-                          }
-                        />
-                        <span className="task-week">{task.weekLabel}</span>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+                        <div className="task-body">
+                          <input
+                            className="task-title"
+                            value={task.title}
+                            onChange={(event) =>
+                              updateTask(phase.id, task.id, "title", event.target.value)
+                            }
+                          />
+                          <textarea
+                            className="task-notes"
+                            rows={2}
+                            value={task.notes}
+                            onChange={(event) =>
+                              updateTask(phase.id, task.id, "notes", event.target.value)
+                            }
+                          />
+                          <span className="task-week">{task.weekLabel}</span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </section>
     </main>
   );

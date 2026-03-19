@@ -86,7 +86,7 @@ function buildInitialState(): PlannerState {
       {
         id: createId("message"),
         role: "assistant",
-        text: "Tell me what you want to learn and how you want the roadmap shaped. I’ll use ChatGPT to turn it into a structured plan you can track and keep editing from chat.",
+        text: "Tell me what you want to learn and how you want the roadmap shaped. I’ll use Gemini to turn it into a structured plan you can track and keep editing from chat.",
       },
     ],
   };
@@ -329,7 +329,7 @@ export default function Home() {
               <p className="panel-meta">
                 {hasRoadmap
                   ? `${planner.config.topic} · ${planner.config.weeks} weeks`
-                  : "Describe what you want to learn and ChatGPT will draft the roadmap."}
+                  : "Describe what you want to learn and Gemini will draft the roadmap."}
               </p>
             </div>
             <button className="ghost-button" onClick={resetPlanner} type="button">

@@ -100,6 +100,14 @@ function formatPercent(phases: Phase[]) {
   return { total: tasks.length, completed, percent };
 }
 
+function formatPhaseMetrics(tasks: Task[]) {
+  const completed = tasks.filter((task) => task.done).length;
+  const total = tasks.length;
+  const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+  return { completed, total, percent };
+}
+
 function hydratePhases(phases: RoadmapResponse["phases"]): Phase[] {
   return phases.map((phase) => ({
     id: createId("phase"),
@@ -270,7 +278,7 @@ export default function Home() {
                 {
                   id: createId("task"),
                   title: "New custom task",
-                  notes: "Edit this task or ask ChatGPT to restructure the roadmap.",
+                  notes: "Edit this task or ask Gemini to restructure the roadmap.",
                   weekLabel: "Custom timing",
                   done: false,
                 },
@@ -398,72 +406,105 @@ export default function Home() {
             <div className="phase-list">
               {planner.phases.map((phase, index) => (
                 <article className="phase-card" key={phase.id}>
-                  <div className="phase-head">
-                    <span className="phase-index">Phase {index + 1}</span>
-                    <button
-                      className="ghost-button"
-                      onClick={() => addTask(phase.id)}
-                      type="button"
-                    >
-                      Add task
-                    </button>
-                  </div>
+                  {(() => {
+                    const phaseMetrics = formatPhaseMetrics(phase.tasks);
 
-                  <input
-                    className="phase-title"
-                    value={phase.title}
-                    onChange={(event) =>
-                      updatePhase(phase.id, "title", event.target.value)
-                    }
-                  />
-                  <textarea
-                    className="phase-summary"
-                    value={phase.summary}
-                    onChange={(event) =>
-                      updatePhase(phase.id, "summary", event.target.value)
-                    }
-                    rows={2}
-                  />
-                  <input
-                    className="phase-focus"
-                    value={phase.focus}
-                    onChange={(event) =>
-                      updatePhase(phase.id, "focus", event.target.value)
-                    }
-                  />
-
-                  <div className="task-list">
-                    {phase.tasks.map((task) => (
-                      <label
-                        className={`task-card ${task.done ? "task-done" : ""}`}
-                        key={task.id}
-                      >
-                        <input
-                          checked={task.done}
-                          onChange={() => toggleTask(phase.id, task.id)}
-                          type="checkbox"
-                        />
-                        <div className="task-body">
-                          <input
-                            className="task-title"
-                            value={task.title}
-                            onChange={(event) =>
-                              updateTask(phase.id, task.id, "title", event.target.value)
-                            }
-                          />
-                          <textarea
-                            className="task-notes"
-                            rows={2}
-                            value={task.notes}
-                            onChange={(event) =>
-                              updateTask(phase.id, task.id, "notes", event.target.value)
-                            }
-                          />
-                          <span className="task-week">{task.weekLabel}</span>
+                    return (
+                      <>
+                        <div className="phase-head">
+                          <div className="phase-heading">
+                            <span className="phase-index">Phase {index + 1}</span>
+                            <div className="phase-stat-row">
+                              <span className="phase-pill">
+                                {phaseMetrics.completed}/{phaseMetrics.total} tasks
+                              </span>
+                              <span className="phase-pill phase-pill-strong">
+                                {phaseMetrics.percent}% complete
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            className="ghost-button"
+                            onClick={() => addTask(phase.id)}
+                            type="button"
+                          >
+                            Add task
+                          </button>
                         </div>
-                      </label>
-                    ))}
-                  </div>
+
+                        <div className="phase-progress-track" aria-hidden="true">
+                          <div
+                            className="phase-progress-bar"
+                            style={{ width: `${phaseMetrics.percent}%` }}
+                          />
+                        </div>
+
+                        <input
+                          className="phase-title"
+                          value={phase.title}
+                          onChange={(event) =>
+                            updatePhase(phase.id, "title", event.target.value)
+                          }
+                        />
+                        <textarea
+                          className="phase-summary"
+                          value={phase.summary}
+                          onChange={(event) =>
+                            updatePhase(phase.id, "summary", event.target.value)
+                          }
+                          rows={2}
+                        />
+                        <input
+                          className="phase-focus"
+                          value={phase.focus}
+                          onChange={(event) =>
+                            updatePhase(phase.id, "focus", event.target.value)
+                          }
+                        />
+
+                        <div className="task-list">
+                          {phase.tasks.map((task) => (
+                            <label
+                              className={`task-card ${task.done ? "task-done" : ""}`}
+                              key={task.id}
+                            >
+                              <div className="task-check-wrap">
+                                <input
+                                  checked={task.done}
+                                  onChange={() => toggleTask(phase.id, task.id)}
+                                  type="checkbox"
+                                />
+                                <span className="task-check-visual" aria-hidden="true" />
+                              </div>
+                              <div className="task-body">
+                                <div className="task-topline">
+                                  <span className="task-status">
+                                    {task.done ? "Done" : "In progress"}
+                                  </span>
+                                  <span className="task-week">{task.weekLabel}</span>
+                                </div>
+                                <input
+                                  className="task-title"
+                                  value={task.title}
+                                  onChange={(event) =>
+                                    updateTask(phase.id, task.id, "title", event.target.value)
+                                  }
+                                />
+                                <textarea
+                                  className="task-notes"
+                                  rows={2}
+                                  value={task.notes}
+                                  onChange={(event) =>
+                                    updateTask(phase.id, task.id, "notes", event.target.value)
+                                  }
+                                />
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </article>
               ))}
             </div>

@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f7f5;
-  --surface: #ffffff;
-  --surface-muted: #fbfbfa;
-  --foreground: #161616;
-  --muted: #6f6f6a;
-  --border: #e7e7e3;
-  --border-strong: #dcdcd6;
-  --accent: #111111;
-  --success: #18794e;
+  --background: #08111f;
+  --background-soft: #101a31;
+  --surface: rgba(12, 20, 37, 0.76);
+  --surface-strong: rgba(15, 24, 44, 0.92);
+  --surface-soft: rgba(122, 92, 255, 0.1);
+  --foreground: #eef4ff;
+  --muted: #9fafcf;
+  --border: rgba(171, 195, 255, 0.14);
+  --border-strong: rgba(171, 195, 255, 0.28);
+  --accent: #7b5cff;
+  --accent-2: #24d2ff;
+  --accent-3: #ff7dcf;
+  --success: #35d39a;
+  --shadow: 0 24px 80px rgba(2, 8, 22, 0.38);
 }
 
 @theme inline {
@@ -30,9 +35,13 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(36, 210, 255, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 125, 207, 0.18), transparent 24%),
+    radial-gradient(circle at bottom center, rgba(123, 92, 255, 0.22), transparent 28%),
+    linear-gradient(180deg, #09111f 0%, #0b1326 54%, #0f1730 100%);
 }
 
 button,
@@ -58,20 +67,16 @@ button {
 }
 
 .roadmap-shell {
-  width: min(1200px, calc(100% - 32px));
+  width: min(1280px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 20px 0 28px;
+  padding: 24px 0 36px;
 }
 
-.eyebrow,
-.panel-kicker,
-.overview-label,
-.metric-label,
 .message-role,
 .phase-index,
 .task-week {
   font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -79,30 +84,32 @@ button {
 .panel,
 .phase-card,
 .message-bubble {
-  background: var(--surface);
   border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px);
 }
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 0.92fr 1.08fr;
-  gap: 20px;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 22px;
   align-items: start;
 }
 
 .workspace-grid-single {
-  grid-template-columns: minmax(0, 720px);
+  grid-template-columns: minmax(0, 760px);
   justify-content: center;
 }
 
 .panel {
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 28px;
+  padding: 22px;
 }
 
 .chat-panel,
 .roadmap-panel {
-  min-height: calc(100vh - 160px);
+  min-height: calc(100vh - 180px);
 }
 
 .chat-panel {
@@ -111,6 +118,16 @@ button {
   max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
+  background:
+    linear-gradient(180deg, rgba(14, 25, 47, 0.94), rgba(8, 16, 31, 0.92)),
+    var(--surface);
+}
+
+.roadmap-panel {
+  background:
+    radial-gradient(circle at top left, rgba(123, 92, 255, 0.12), transparent 24%),
+    radial-gradient(circle at top right, rgba(36, 210, 255, 0.1), transparent 20%),
+    linear-gradient(180deg, rgba(12, 20, 37, 0.9), rgba(10, 17, 31, 0.92));
 }
 
 .workspace-grid-single .chat-panel {
@@ -127,66 +144,93 @@ button {
 }
 
 .panel-header h2 {
-  margin: 4px 0 0;
-  font-size: 1.35rem;
-  line-height: 1.2;
-  letter-spacing: -0.03em;
-  font-weight: 600;
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-weight: 650;
 }
 
 .panel-meta {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .ghost-button,
 .secondary-button,
 .primary-button {
   border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  font-weight: 600;
+  color: var(--foreground);
   transition:
-    background 140ms ease,
-    border-color 140ms ease,
-    color 140ms ease;
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ghost-button,
+.secondary-button {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .ghost-button:hover,
 .secondary-button:hover {
-  background: #f2f2ef;
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.primary-button {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2) 70%, var(--accent-3));
+  box-shadow: 0 12px 30px rgba(71, 113, 255, 0.34);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px rgba(71, 113, 255, 0.42);
+}
+
+.primary-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
 }
 
 .message-list {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding-right: 2px;
+  padding: 18px 4px 0 0;
 }
 
 .message-bubble {
-  border-radius: 16px;
-  padding: 14px 15px;
+  border-radius: 20px;
+  padding: 15px 16px;
 }
 
 .message-bubble p {
   margin: 8px 0 0;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .message-assistant {
-  background: var(--surface-muted);
+  background:
+    linear-gradient(180deg, rgba(20, 32, 60, 0.96), rgba(13, 24, 44, 0.94));
 }
 
 .message-user {
-  background: #171717;
-  border-color: #171717;
-  color: #ffffff;
-  margin-left: 24px;
-}
-
-.message-user .message-role {
-  color: rgba(255, 255, 255, 0.64);
+  margin-left: 28px;
+  border-color: rgba(138, 225, 255, 0.18);
+  background:
+    linear-gradient(135deg, rgba(123, 92, 255, 0.38), rgba(36, 210, 255, 0.22));
 }
 
 .composer {
@@ -202,10 +246,14 @@ button {
 .phase-focus,
 .task-title {
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
   color: var(--foreground);
+  border: 1px solid rgba(171, 195, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .composer textarea,
@@ -215,9 +263,13 @@ button {
 }
 
 .composer textarea {
-  min-height: 110px;
-  padding: 14px 15px;
+  min-height: 118px;
+  padding: 16px 16px;
   line-height: 1.6;
+}
+
+.composer textarea::placeholder {
+  color: rgba(191, 205, 240, 0.6);
 }
 
 .composer textarea:focus,
@@ -227,7 +279,9 @@ button {
 .phase-focus:focus,
 .task-title:focus {
   outline: none;
-  border-color: var(--border-strong);
+  border-color: rgba(98, 203, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 4px rgba(36, 210, 255, 0.12);
 }
 
 .composer-footer {
@@ -235,48 +289,78 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 12px;
+  margin-top: 14px;
   color: var(--muted);
   font-size: 0.92rem;
+  line-height: 1.55;
 }
 
-.ghost-button,
-.secondary-button,
-.primary-button {
-  border: 1px solid var(--border);
-  padding: 10px 14px;
-  background: var(--surface);
-  color: var(--foreground);
-  font-weight: 500;
-}
-
-.primary-button {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #ffffff;
-}
-
-.primary-button:hover {
-  background: #2a2a2a;
-  border-color: #2a2a2a;
+.form-error {
+  margin: 12px 0 0;
+  color: #ff9ccf;
+  font-size: 0.92rem;
 }
 
 .phase-list {
   display: grid;
-  gap: 14px;
-  margin-top: 20px;
+  gap: 16px;
+  margin-top: 22px;
 }
 
 .phase-card {
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 24px;
+  padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(17, 28, 52, 0.94), rgba(10, 18, 35, 0.94));
 }
 
 .phase-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
+}
+
+.phase-heading {
+  min-width: 0;
+}
+
+.phase-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.phase-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(171, 195, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.phase-pill-strong {
+  color: #f6f8ff;
+  background: linear-gradient(135deg, rgba(123, 92, 255, 0.24), rgba(36, 210, 255, 0.18));
+}
+
+.phase-progress-track {
+  height: 9px;
+  margin: 16px 0 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.phase-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+  box-shadow: 0 0 20px rgba(123, 92, 255, 0.45);
 }
 
 .phase-title,
@@ -286,72 +370,145 @@ button {
   border: none;
   border-radius: 0;
   background: transparent;
+  box-shadow: none;
 }
 
 .phase-title {
-  margin-top: 8px;
-  font-size: 1.2rem;
-  line-height: 1.3;
-  font-weight: 600;
-  letter-spacing: -0.03em;
+  margin-top: 4px;
+  font-size: 1.22rem;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -0.035em;
 }
 
 .phase-summary,
 .task-notes {
   margin-top: 10px;
-  padding: 11px 12px;
-  line-height: 1.55;
-  background: var(--surface-muted);
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.045);
+  line-height: 1.6;
 }
 
 .phase-focus {
-  margin-top: 10px;
+  margin-top: 12px;
   color: var(--muted);
 }
 
 .task-list {
   display: grid;
-  gap: 10px;
-  margin-top: 14px;
+  gap: 12px;
+  margin-top: 18px;
 }
 
 .task-card {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--surface-muted);
+  gap: 14px;
+  align-items: start;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(171, 195, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.03));
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
 }
 
-.task-card input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--success);
-  margin-top: 3px;
+.task-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(128, 214, 255, 0.32);
+  box-shadow: 0 18px 28px rgba(6, 14, 32, 0.24);
+}
+
+.task-check-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+
+.task-check-wrap input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  opacity: 0;
+}
+
+.task-check-visual {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(171, 195, 255, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 4px transparent;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.task-check-wrap input[type="checkbox"]:checked + .task-check-visual {
+  border-color: rgba(53, 211, 154, 0.8);
+  background: rgba(53, 211, 154, 0.2);
+  box-shadow: inset 0 0 0 5px rgba(53, 211, 154, 0.9);
 }
 
 .task-body {
   min-width: 0;
 }
 
+.task-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.task-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(123, 92, 255, 0.12);
+  color: #dbe3ff;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+}
+
 .task-title {
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 620;
 }
 
 .task-week {
-  display: inline-block;
-  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(171, 195, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .task-done {
-  background: #f5faf7;
+  border-color: rgba(53, 211, 154, 0.28);
+  background:
+    linear-gradient(180deg, rgba(53, 211, 154, 0.11), rgba(255, 255, 255, 0.03));
+}
+
+.task-done .task-status {
+  background: rgba(53, 211, 154, 0.16);
+  color: #c5ffe9;
 }
 
 .task-done .task-title,
 .task-done .task-notes {
-  color: var(--muted);
+  color: rgba(207, 226, 255, 0.68);
   text-decoration: line-through;
 }
 
@@ -368,19 +525,20 @@ button {
 
 @media (max-width: 720px) {
   .roadmap-shell {
-    width: min(100% - 20px, 1200px);
-    padding: 20px 0 28px;
+    width: min(100% - 20px, 1280px);
+    padding: 18px 0 24px;
   }
 
   .panel,
   .phase-card,
   .message-bubble {
-    border-radius: 16px;
+    border-radius: 22px;
   }
 
-  .composer-footer,
+  .panel-header,
   .phase-head,
-  .panel-header {
+  .composer-footer,
+  .task-topline {
     flex-direction: column;
     align-items: stretch;
   }

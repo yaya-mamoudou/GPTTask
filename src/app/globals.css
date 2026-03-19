@@ -60,19 +60,7 @@ button {
 .roadmap-shell {
   width: min(1200px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 28px 0 40px;
-}
-
-.hero-panel {
-  display: grid;
-  grid-template-columns: 1.4fr 0.9fr;
-  gap: 20px;
-  align-items: start;
-  margin-bottom: 20px;
-}
-
-.hero-copy {
-  padding: 8px 0;
+  padding: 20px 0 28px;
 }
 
 .eyebrow,
@@ -88,58 +76,36 @@ button {
   color: var(--muted);
 }
 
-.hero-copy h1 {
-  max-width: 11ch;
-  margin: 0;
-  font-size: clamp(2.5rem, 5vw, 4.4rem);
-  line-height: 1;
-  letter-spacing: -0.05em;
-  font-weight: 600;
-}
-
-.hero-text {
-  max-width: 58ch;
-  margin: 14px 0 0;
-  color: var(--muted);
-  font-size: 1rem;
-  line-height: 1.65;
-}
-
-.hero-metrics {
-  display: grid;
-  gap: 12px;
-}
-
-.metric-card,
 .panel,
-.overview-card,
 .phase-card,
 .message-bubble {
   background: var(--surface);
   border: 1px solid var(--border);
 }
 
-.metric-card {
-  border-radius: 16px;
-  padding: 16px 18px;
-}
-
-.metric-card strong {
-  display: block;
-  margin-top: 6px;
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-
 .workspace-grid {
   display: grid;
   grid-template-columns: 0.92fr 1.08fr;
   gap: 20px;
+  align-items: start;
 }
 
 .panel {
   border-radius: 20px;
   padding: 20px;
+}
+
+.chat-panel,
+.roadmap-panel {
+  min-height: calc(100vh - 160px);
+}
+
+.chat-panel {
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
 }
 
 .panel-header {
@@ -149,8 +115,7 @@ button {
   gap: 16px;
 }
 
-.panel-header h2,
-.overview-card h3 {
+.panel-header h2 {
   margin: 4px 0 0;
   font-size: 1.35rem;
   line-height: 1.2;
@@ -158,14 +123,12 @@ button {
   font-weight: 600;
 }
 
-.prompt-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 16px 0 18px;
+.panel-meta {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
-.prompt-chip,
 .ghost-button,
 .secondary-button,
 .primary-button {
@@ -176,15 +139,6 @@ button {
     color 140ms ease;
 }
 
-.prompt-chip {
-  border: 1px solid var(--border);
-  background: var(--surface-muted);
-  color: var(--foreground);
-  padding: 8px 12px;
-  line-height: 1.4;
-}
-
-.prompt-chip:hover,
 .ghost-button:hover,
 .secondary-button:hover {
   background: #f2f2ef;
@@ -193,8 +147,10 @@ button {
 .message-list {
   display: grid;
   gap: 10px;
-  max-height: 420px;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
+  padding-right: 2px;
 }
 
 .message-bubble {
@@ -294,45 +250,10 @@ button {
   border-color: #2a2a2a;
 }
 
-.overview-card {
-  margin-top: 18px;
-  border-radius: 18px;
-  padding: 18px;
-}
-
-.progress-track {
-  height: 8px;
-  margin: 16px 0 14px;
-  border-radius: 999px;
-  background: #efefeb;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  border-radius: 999px;
-  background: #181818;
-}
-
-.overview-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.overview-tags span {
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-size: 0.88rem;
-}
-
 .phase-list {
   display: grid;
   gap: 14px;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
 .phase-card {
@@ -424,9 +345,13 @@ button {
 }
 
 @media (max-width: 1100px) {
-  .hero-panel,
   .workspace-grid {
     grid-template-columns: 1fr;
+  }
+
+  .chat-panel {
+    position: static;
+    max-height: none;
   }
 }
 
@@ -436,14 +361,9 @@ button {
     padding: 20px 0 28px;
   }
 
-  .hero-copy h1 {
-    font-size: clamp(2.2rem, 11vw, 3.2rem);
-  }
-
   .panel,
-  .overview-card,
   .phase-card,
-  .metric-card {
+  .message-bubble {
     border-radius: 16px;
   }
 

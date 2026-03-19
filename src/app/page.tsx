@@ -42,13 +42,6 @@ type PlannerState = {
   phases: Phase[];
 };
 
-const quickPrompts = [
-  "Build me a beginner roadmap for product design in 6 weeks.",
-  "Make this roadmap shorter and more project-based.",
-  "Turn this into 3 phases with a capstone project.",
-  "Keep the structure, but make the workload lighter.",
-];
-
 const topicTemplates = [
   "HTML, CSS, and JavaScript",
   "React and UI state",
@@ -528,56 +521,18 @@ export default function Home() {
 
   return (
     <main className="roadmap-shell">
-      <section className="hero-panel">
-        <div className="hero-copy">
-          <p className="eyebrow">Roadmaps that stay editable</p>
-          <h1>Chat your way into a study plan you can actually finish.</h1>
-          <p className="hero-text">
-            Turn messy AI conversations into a structured roadmap with phases,
-            trackable tasks, and automatic progress. Then keep reshaping the plan
-            from chat whenever your pace or goals change.
-          </p>
-        </div>
-
-        <div className="hero-metrics">
-          <div className="metric-card">
-            <span className="metric-label">Goal</span>
-            <strong>{planner.config.topic}</strong>
-          </div>
-          <div className="metric-card">
-            <span className="metric-label">Timeline</span>
-            <strong>{planner.config.weeks} weeks</strong>
-          </div>
-          <div className="metric-card">
-            <span className="metric-label">Progress</span>
-            <strong>{metrics.percent}% complete</strong>
-          </div>
-        </div>
-      </section>
-
       <section className="workspace-grid">
         <aside className="panel chat-panel">
           <div className="panel-header">
             <div>
-              <p className="panel-kicker">Conversation</p>
               <h2>Roadmap Chat</h2>
+              <p className="panel-meta">
+                {planner.config.topic} · {planner.config.weeks} weeks
+              </p>
             </div>
             <button className="ghost-button" onClick={resetPlanner} type="button">
               Reset
             </button>
-          </div>
-
-          <div className="prompt-row">
-            {quickPrompts.map((prompt) => (
-              <button
-                key={prompt}
-                className="prompt-chip"
-                onClick={() => submitPrompt(prompt)}
-                type="button"
-              >
-                {prompt}
-              </button>
-            ))}
           </div>
 
           <div className="message-list">
@@ -626,30 +581,14 @@ export default function Home() {
         <section className="panel roadmap-panel">
           <div className="panel-header">
             <div>
-              <p className="panel-kicker">Auto-organized plan</p>
               <h2>Trackable Roadmap</h2>
+              <p className="panel-meta">
+                {metrics.completed} of {metrics.total} tasks complete · {metrics.percent}%
+              </p>
             </div>
             <button className="secondary-button" onClick={addPhase} type="button">
               Add phase
             </button>
-          </div>
-
-          <div className="overview-card">
-            <div>
-              <p className="overview-label">Progress overview</p>
-              <h3>
-                {metrics.completed} of {metrics.total} tasks completed
-              </h3>
-            </div>
-            <div className="progress-track" aria-hidden="true">
-              <div className="progress-bar" style={{ width: `${metrics.percent}%` }} />
-            </div>
-            <div className="overview-tags">
-              <span>{planner.config.level}</span>
-              <span>{planner.config.emphasis}</span>
-              <span>{planner.config.intensity}</span>
-              <span>{planner.config.phases} phases</span>
-            </div>
           </div>
 
           <div className="phase-list">

@@ -1,17 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a1020;
-  --surface: rgba(13, 21, 39, 0.86);
-  --surface-soft: rgba(255, 255, 255, 0.04);
-  --foreground: #edf3ff;
-  --muted: #96a7c7;
-  --border: rgba(166, 189, 240, 0.12);
-  --border-strong: rgba(166, 189, 240, 0.24);
-  --accent: #6d5efc;
-  --accent-2: #1fc7ff;
-  --success: #35d39a;
-  --shadow: 0 22px 70px rgba(2, 8, 22, 0.32);
+  --background: #120f1d;
+  --background-deep: #0e0a18;
+  --surface: rgba(255, 255, 255, 0.1);
+  --surface-strong: rgba(255, 255, 255, 0.16);
+  --surface-soft: rgba(255, 255, 255, 0.06);
+  --foreground: #fff7ff;
+  --muted: #d6c5df;
+  --border: rgba(255, 255, 255, 0.18);
+  --border-strong: rgba(255, 255, 255, 0.28);
+  --accent: #c96dff;
+  --accent-2: #ff8fcb;
+  --success: #52d8aa;
+  --shadow: 0 24px 80px rgba(13, 7, 24, 0.28);
 }
 
 @theme inline {
@@ -34,13 +36,41 @@ body {
   min-height: 100vh;
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
-  background-color: #0a1020;
-  background-image:
-    radial-gradient(circle at top left, rgba(31, 199, 255, 0.14), transparent 28%),
-    radial-gradient(circle at top right, rgba(109, 94, 252, 0.18), transparent 24%),
-    linear-gradient(180deg, #09101e 0%, #0b1223 56%, #0d1630 100%);
+  background:
+    linear-gradient(180deg, #1b132a 0%, #130f20 44%, #100d1a 100%);
   background-repeat: no-repeat;
   background-attachment: fixed;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: auto;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(20px);
+  opacity: 0.9;
+}
+
+body::before {
+  top: 6rem;
+  left: -6rem;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 154, 211, 0.62), rgba(255, 154, 211, 0.08) 62%, transparent 74%);
+}
+
+body::after {
+  top: 16rem;
+  right: -7rem;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(197, 109, 255, 0.58), rgba(197, 109, 255, 0.08) 64%, transparent 76%);
 }
 
 button,
@@ -66,9 +96,25 @@ button {
 }
 
 .roadmap-shell {
+  position: relative;
+  z-index: 1;
   width: min(1240px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 24px 0 32px;
+  padding: 28px 0 36px;
+}
+
+.roadmap-shell::before {
+  content: "";
+  position: fixed;
+  bottom: -7rem;
+  left: 24%;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 201, 228, 0.28), rgba(255, 201, 228, 0.04) 60%, transparent 74%);
+  filter: blur(18px);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .workspace-grid {
@@ -86,14 +132,15 @@ button {
 .panel,
 .message-bubble,
 .phase-card {
-  background: var(--surface);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
 }
 
 .panel {
-  border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: 28px;
   padding: 20px;
 }
 
@@ -126,9 +173,9 @@ button {
 .panel-header h2 {
   margin: 0;
   font-size: 1.4rem;
-  line-height: 1.1;
+  line-height: 1.08;
   letter-spacing: -0.04em;
-  font-weight: 640;
+  font-weight: 650;
 }
 
 .panel-meta,
@@ -161,28 +208,31 @@ button {
   padding: 10px 14px;
   font-weight: 600;
   transition:
-    background 160ms ease,
     transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
     opacity 160ms ease;
 }
 
 .ghost-button,
 .secondary-button {
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--foreground);
 }
 
 .ghost-button:hover,
 .secondary-button:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .primary-button {
   border: none;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: white;
+  color: #fff7ff;
+  box-shadow: 0 14px 34px rgba(197, 109, 255, 0.28);
 }
 
 .primary-button:hover {
@@ -205,45 +255,46 @@ button {
 }
 
 .message-bubble {
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 14px 15px;
 }
 
 .message-bubble p {
   margin: 8px 0 0;
-  line-height: 1.6;
+  line-height: 1.62;
 }
 
 .message-assistant {
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .message-user {
   margin-left: 28px;
-  background: linear-gradient(135deg, rgba(109, 94, 252, 0.28), rgba(31, 199, 255, 0.2));
+  background: linear-gradient(135deg, rgba(201, 109, 255, 0.28), rgba(255, 143, 203, 0.22));
 }
 
 .message-loading {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .composer {
   margin-top: 18px;
   padding-top: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .composer-input-shell {
   position: relative;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.07);
   overflow: hidden;
+  backdrop-filter: blur(20px);
 }
 
 .composer-input-shell:focus-within {
   border-color: var(--border-strong);
-  box-shadow: 0 0 0 4px rgba(31, 199, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(255, 143, 203, 0.12);
 }
 
 .composer textarea,
@@ -266,12 +317,12 @@ button {
 
 .composer textarea {
   min-height: 122px;
-  padding: 16px 112px 16px 16px;
-  line-height: 1.6;
+  padding: 16px 110px 16px 16px;
+  line-height: 1.62;
 }
 
 .composer textarea::placeholder {
-  color: rgba(194, 206, 233, 0.64);
+  color: rgba(241, 228, 246, 0.56);
 }
 
 .composer textarea:focus,
@@ -307,7 +358,7 @@ button {
 
 .form-error {
   margin: 10px 0 0;
-  color: #ff9abb;
+  color: #ffb0cd;
   font-size: 0.92rem;
 }
 
@@ -322,7 +373,7 @@ button {
   position: relative;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .loading-line::after,
@@ -331,7 +382,7 @@ button {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
   animation: shimmer 1.35s infinite;
 }
 
@@ -347,9 +398,15 @@ button {
   width: 18px;
   height: 18px;
   border: 2px solid rgba(255, 255, 255, 0.18);
-  border-top-color: rgba(255, 255, 255, 0.88);
+  border-top-color: rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+.preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .phase-list {
@@ -363,7 +420,7 @@ button {
 }
 
 .phase-card {
-  border-radius: 18px;
+  border-radius: 22px;
   padding: 16px 16px 14px;
 }
 
@@ -387,7 +444,7 @@ button {
   height: 4px;
   margin: 14px 0 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.09);
   overflow: hidden;
 }
 
@@ -411,7 +468,7 @@ button {
   margin-top: 8px;
   padding: 0;
   color: var(--muted);
-  line-height: 1.55;
+  line-height: 1.56;
 }
 
 .phase-focus {
@@ -432,7 +489,7 @@ button {
   gap: 12px;
   align-items: start;
   padding: 12px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   background: transparent;
   box-shadow: none;
 }
@@ -457,7 +514,7 @@ button {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 1.5px solid rgba(166, 189, 240, 0.44);
+  border: 1.5px solid rgba(255, 255, 255, 0.34);
   background: transparent;
   transition:
     border-color 140ms ease,
@@ -468,7 +525,7 @@ button {
 .task-check-wrap input[type="checkbox"]:checked + .task-check-visual {
   border-color: var(--success);
   background: var(--success);
-  box-shadow: inset 0 0 0 4px rgba(8, 16, 32, 0.95);
+  box-shadow: inset 0 0 0 4px rgba(19, 13, 29, 0.96);
 }
 
 .task-body {
@@ -491,6 +548,10 @@ button {
   font-weight: 580;
 }
 
+.task-title-preview {
+  margin: 0;
+}
+
 .task-notes {
   margin-top: 4px;
   font-size: 0.92rem;
@@ -498,21 +559,12 @@ button {
 
 .task-done .task-title,
 .task-done .task-notes {
-  color: rgba(171, 190, 221, 0.58);
+  color: rgba(222, 207, 231, 0.52);
   text-decoration: line-through;
 }
 
 .roadmap-reveal {
   animation: fadeUp 360ms ease;
-}
-
-.roadmap-loader-strip {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 16px;
-  color: var(--muted);
-  font-size: 0.92rem;
 }
 
 .phase-card-skeleton,
@@ -591,7 +643,7 @@ button {
   }
 
   .panel {
-    border-radius: 20px;
+    border-radius: 22px;
     padding: 16px;
   }
 
@@ -608,6 +660,10 @@ button {
 
   .composer-status {
     text-align: left;
+  }
+
+  .preview-actions {
+    width: 100%;
   }
 
   .message-user {

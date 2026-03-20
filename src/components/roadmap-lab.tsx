@@ -185,6 +185,7 @@ export default function RoadmapLab({ chatId }: Props) {
 	const [error, setError] = useState<string | null>(null);
 	const [animateRoadmap, setAnimateRoadmap] = useState(false);
 	const [isRoadmapOpen, setIsRoadmapOpen] = useState(false);
+	const [isRoadmapEditing, setIsRoadmapEditing] = useState(false);
 	const [isMobileChatsOpen, setIsMobileChatsOpen] = useState(false);
 	const [hasHydratedChats, setHasHydratedChats] = useState(false);
 
@@ -327,6 +328,21 @@ export default function RoadmapLab({ chatId }: Props) {
 		setIsRoadmapOpen(false);
 	}
 
+	const planner = activeSession?.planner ?? buildInitialState();
+	const pendingRoadmap = activeSession?.pendingRoadmap ?? null;
+	const metrics = formatPercent(planner.phases);
+	const hasRoadmap = planner.phases.length > 0;
+	const displayedRoadmap = pendingRoadmap
+		? { config: pendingRoadmap.config, phases: pendingRoadmap.phases }
+		: { config: planner.config, phases: planner.phases };
+	const showingPreview = pendingRoadmap !== null;
+	const shouldShowRoadmapPanel = displayedRoadmap.phases.length > 0;
+	const orderedSessions = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt);
+
+	useEffect(() => {
+		setIsRoadmapEditing(false);
+	}, [chatId, showingPreview]);
+
 	if (!hasHydratedChats || !activeSession) {
 		return (
 			<main className='roadmap-shell'>
@@ -350,17 +366,6 @@ export default function RoadmapLab({ chatId }: Props) {
 			</main>
 		);
 	}
-
-	const planner = activeSession.planner;
-	const pendingRoadmap = activeSession.pendingRoadmap;
-	const metrics = formatPercent(planner.phases);
-	const hasRoadmap = planner.phases.length > 0;
-	const displayedRoadmap = pendingRoadmap
-		? { config: pendingRoadmap.config, phases: pendingRoadmap.phases }
-		: { config: planner.config, phases: planner.phases };
-	const showingPreview = pendingRoadmap !== null;
-	const shouldShowRoadmapPanel = displayedRoadmap.phases.length > 0;
-	const orderedSessions = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt);
 
 	async function submitPrompt(rawInput: string) {
 		const input = rawInput.trim();
@@ -569,69 +574,6 @@ export default function RoadmapLab({ chatId }: Props) {
 		}));
 	}
 
-	function addTask(phaseId: string) {
-		updateActiveSession((current) => ({
-			...current,
-			updatedAt: Date.now(),
-			planner: {
-				...current.planner,
-				phases: current.planner.phases.map((phase) =>
-					phase.id !== phaseId
-						? phase
-						: {
-								...phase,
-								tasks: [
-									...phase.tasks,
-									{
-										id: createId('task'),
-										title: 'New custom task',
-										notes: 'Edit this task or ask Gemini to restructure the roadmap.',
-										weekLabel: 'Custom timing',
-										done: false,
-									},
-								],
-							},
-				),
-			},
-		}));
-	}
-
-	function addPhase() {
-		updateActiveSession((current) => {
-			const nextPhases = [
-				...current.planner.phases,
-				{
-					id: createId('phase'),
-					title: 'New Phase',
-					summary: 'Describe what this phase should accomplish.',
-					focus: 'Set the main learning objective for this phase.',
-					tasks: [
-						{
-							id: createId('task'),
-							title: 'Define the first task',
-							notes: 'This can be adjusted manually or from chat.',
-							weekLabel: 'Custom timing',
-							done: false,
-						},
-					],
-				},
-			];
-
-			return {
-				...current,
-				updatedAt: Date.now(),
-				planner: {
-					...current.planner,
-					config: {
-						...current.planner.config,
-						phases: nextPhases.length,
-					},
-					phases: nextPhases,
-				},
-			};
-		});
-	}
-
 	function applyPendingRoadmap() {
 		if (!pendingRoadmap) {
 			return;
@@ -655,6 +597,7 @@ export default function RoadmapLab({ chatId }: Props) {
 			pendingRoadmap: null,
 		}));
 		setIsRoadmapOpen(false);
+		setIsRoadmapEditing(false);
 	}
 
 	return (
@@ -886,8 +829,12 @@ export default function RoadmapLab({ chatId }: Props) {
 										</button>
 									</div>
 								) : hasRoadmap ? (
-									<button className='secondary-button' onClick={addPhase} type='button'>
-										Add phase
+									<button
+										className='secondary-button'
+										onClick={() => setIsRoadmapEditing((current) => !current)}
+										type='button'
+									>
+										{isRoadmapEditing ? 'Done' : 'Edit'}
 									</button>
 								) : null}
 							</div>
@@ -909,15 +856,6 @@ export default function RoadmapLab({ chatId }: Props) {
 															{phaseMetrics.percent}%
 														</p>
 													</div>
-													{showingPreview ? null : (
-														<button
-															className='ghost-button'
-															onClick={() => addTask(phase.id)}
-															type='button'
-														>
-															Add task
-														</button>
-													)}
 												</div>
 
 												<div className='phase-progress-track' aria-hidden='true'>
@@ -927,7 +865,7 @@ export default function RoadmapLab({ chatId }: Props) {
 													/>
 												</div>
 
-												{showingPreview ? (
+												{showingPreview || !isRoadmapEditing ? (
 													<>
 														<h3 className='phase-title'>{phase.title}</h3>
 														<p className='phase-summary'>{phase.summary}</p>
@@ -962,7 +900,7 @@ export default function RoadmapLab({ chatId }: Props) {
 
 												<div className='task-list'>
 													{phase.tasks.map((task) => (
-														<label
+														<div
 															className={`task-card ${task.done ? 'task-done' : ''}`}
 															key={task.id}
 														>
@@ -984,7 +922,7 @@ export default function RoadmapLab({ chatId }: Props) {
 																<div className='task-topline'>
 																	<span className='task-week'>{task.weekLabel}</span>
 																</div>
-																{showingPreview ? (
+																{showingPreview || !isRoadmapEditing ? (
 																	<>
 																		<p className='task-title task-title-preview'>{task.title}</p>
 																		<p className='task-notes'>{task.notes}</p>
@@ -1009,7 +947,7 @@ export default function RoadmapLab({ chatId }: Props) {
 																	</>
 																)}
 															</div>
-														</label>
+														</div>
 													))}
 												</div>
 											</>

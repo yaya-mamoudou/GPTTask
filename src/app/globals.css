@@ -1247,11 +1247,11 @@ button {
 	}
 
 	.roadmap-header-actions {
-		width: 100%;
+		/* width: 100%; */
 	}
 
 	.roadmap-header-main {
-		width: 100%;
+		width: auto;
 	}
 
 	.mobile-chats-trigger {

@@ -605,7 +605,6 @@ export default function RoadmapLab({ chatId }: Props) {
 			},
 			pendingRoadmap: null,
 		}));
-		setIsRoadmapOpen(false);
 		setIsRoadmapEditing(false);
 	}
 
@@ -771,8 +770,8 @@ export default function RoadmapLab({ chatId }: Props) {
 								value={draft}
 								onChange={(event) => setDraft(event.target.value)}
 								onKeyDown={handleComposerKeyDown}
-								placeholder='Example: Build me a beginner roadmap for data analysis in 10 weeks, then make it project-heavy.'
-								rows={4}
+								placeholder='Ask for a roadmap or refinement...'
+								rows={2}
 							/>
 							<button
 								className='primary-button composer-submit'

@@ -783,8 +783,8 @@ button {
 }
 
 .composer textarea {
-	min-height: 122px;
-	padding: 16px 110px 16px 16px;
+	min-height: 50px;
+	padding: 10px 110px 10px 16px;
 	line-height: 1.62;
 }
 
@@ -1264,7 +1264,7 @@ button {
 	}
 
 	.panel-header h2 {
-		font-size: 1.2rem;
+		font-size: 1.08rem;
 	}
 
 	.panel-meta,
@@ -1273,7 +1273,7 @@ button {
 	.phase-summary,
 	.phase-focus,
 	.task-notes {
-		font-size: 0.9rem;
+		font-size: 0.84rem;
 	}
 
 	.message-list {
@@ -1288,12 +1288,23 @@ button {
 		padding: 12px 13px;
 	}
 
+	.message-bubble p,
+	.message-content p,
+	.message-content ul,
+	.message-content ol {
+		font-size: 0.93rem;
+	}
+
+	.message-role {
+		font-size: 0.62rem;
+	}
+
 	.chat-empty-state {
 		padding: 8px 2px 12px;
 	}
 
 	.chat-empty-state h3 {
-		font-size: 1.28rem;
+		font-size: 1.14rem;
 	}
 
 	.composer-submit {
@@ -1318,8 +1329,8 @@ button {
 	}
 
 	.composer textarea {
-		min-height: 108px;
-		padding: 14px 98px 14px 14px;
+		min-height: 64px;
+		padding: 12px 98px 12px 14px;
 	}
 
 	.composer-footer {
@@ -1358,7 +1369,11 @@ button {
 	}
 
 	.task-title {
-		font-size: 0.96rem;
+		font-size: 0.9rem;
+	}
+
+	.phase-title {
+		font-size: 0.98rem;
 	}
 
 	.message-user {

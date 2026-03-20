@@ -456,6 +456,8 @@ export default function RoadmapLab({ chatId }: Props) {
 				payload.roadmap
 			) {
 				const roadmap = payload.roadmap;
+				const pendingMode =
+					payload.mode === 'create_roadmap' ? 'create_roadmap' : 'update_roadmap';
 
 				updateActiveSession((current) => ({
 					...current,
@@ -471,7 +473,7 @@ export default function RoadmapLab({ chatId }: Props) {
 					),
 					updatedAt: Date.now(),
 					pendingRoadmap: {
-						mode: payload.mode,
+						mode: pendingMode,
 						config: roadmap.config,
 						phases: hydratePhases(roadmap.phases),
 						message: payload.assistantMessage,

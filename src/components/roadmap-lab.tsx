@@ -470,8 +470,7 @@ export default function RoadmapLab({ chatId }: Props) {
 				payload.roadmap
 			) {
 				const roadmap = payload.roadmap;
-				const pendingMode =
-					payload.mode === 'create_roadmap' ? 'create_roadmap' : 'update_roadmap';
+				const pendingMode = payload.mode === 'create_roadmap' ? 'create_roadmap' : 'update_roadmap';
 
 				updateActiveSession((current) => ({
 					...current,
@@ -781,13 +780,13 @@ export default function RoadmapLab({ chatId }: Props) {
 								{isSubmitting ? 'Generating...' : 'Send'}
 							</button>
 						</div>
-						<div className='composer-footer'>
+						{/* <div className='composer-footer'>
 							<span className='composer-status'>
 								{isSubmitting
 									? 'Gemini is shaping the roadmap...'
 									: 'Roadmaps update from the conversation.'}
 							</span>
-						</div>
+						</div> */}
 						{error ? <p className='form-error'>{error}</p> : null}
 					</form>
 				</aside>

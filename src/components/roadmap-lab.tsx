@@ -179,6 +179,8 @@ export default function RoadmapLab({ chatId }: Props) {
 	const router = useRouter();
 	const composerId = useId();
 	const createdSessionRouteRef = useRef<string | null>(null);
+	const messageListRef = useRef<HTMLDivElement | null>(null);
+	const messageEndRef = useRef<HTMLDivElement | null>(null);
 	const [sessions, setSessions] = useState<ChatSession[]>([]);
 	const [draft, setDraft] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -342,6 +344,13 @@ export default function RoadmapLab({ chatId }: Props) {
 	useEffect(() => {
 		setIsRoadmapEditing(false);
 	}, [chatId, showingPreview]);
+
+	useEffect(() => {
+		messageEndRef.current?.scrollIntoView({
+			block: 'end',
+			behavior: 'smooth',
+		});
+	}, [chatId, isSubmitting, planner.messages.length]);
 
 	if (!hasHydratedChats || !activeSession) {
 		return (
@@ -710,7 +719,7 @@ export default function RoadmapLab({ chatId }: Props) {
 						</div>
 					</div>
 
-					<div className='message-list'>
+					<div className='message-list' ref={messageListRef}>
 						{planner.messages.length === 0 ? (
 							<div className='chat-empty-state'>
 								<div className='chat-empty-icon' aria-hidden='true'>
@@ -749,6 +758,7 @@ export default function RoadmapLab({ chatId }: Props) {
 								</div>
 							</article>
 						) : null}
+						<div ref={messageEndRef} />
 					</div>
 
 					<form className='composer' onSubmit={handleSubmit}>

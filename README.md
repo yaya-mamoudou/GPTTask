@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Roadmap Lab
+
+Roadmap Lab is a chat-first learning planner that turns AI conversations into trackable study roadmaps. Each chat keeps its own conversation history, roadmap draft, and progress state.
 
 ## Getting Started
 
-First, run the development server:
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create your local environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Add your Gemini API key to `.env.local`.
+
+4. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash-lite
+```
 
-## Learn More
+`gemini-2.5-flash-lite` is the recommended default here because it is usually more practical for free-tier and lower-quota usage.
 
-To learn more about Next.js, take a look at the following resources:
+## Available Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev
+npm run lint
+npm run build
+npm run start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Production Notes
 
-## Deploy on Vercel
+- The Gemini-powered planner runs through `src/app/api/roadmap/route.ts`.
+- Chats and roadmaps are currently stored in browser `localStorage`, so they are not shared across browsers or devices.
+- To support shared chats, persistence, and shareable links, the next production step is adding a database-backed chat store.
+- Your deployment environment must provide `GEMINI_API_KEY`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This app can be deployed as a standard Next.js application on platforms like Vercel.
+
+Before deploying:
+
+- set `GEMINI_API_KEY`
+- optionally set `GEMINI_MODEL`
+- run `npm run build`

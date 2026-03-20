@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { FormEvent, KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -428,9 +428,10 @@ export default function RoadmapLab({ chatId }: Props) {
 			});
 
 			const payload = (await response.json()) as AssistantDecision | { error?: string };
+			const responseError = 'error' in payload ? payload.error : undefined;
 
 			if (!response.ok || !('mode' in payload)) {
-				throw new Error(payload.error || 'Unable to generate roadmap right now.');
+				throw new Error(responseError || 'Unable to generate roadmap right now.');
 			}
 
 			updateActiveSession((current) => ({
@@ -454,6 +455,8 @@ export default function RoadmapLab({ chatId }: Props) {
 				(payload.mode === 'create_roadmap' || payload.mode === 'update_roadmap') &&
 				payload.roadmap
 			) {
+				const roadmap = payload.roadmap;
+
 				updateActiveSession((current) => ({
 					...current,
 					title: deriveSessionTitle(
@@ -461,7 +464,7 @@ export default function RoadmapLab({ chatId }: Props) {
 							...current,
 							planner: {
 								...current.planner,
-								config: payload.roadmap.config,
+								config: roadmap.config,
 							},
 						},
 						input,
@@ -469,8 +472,8 @@ export default function RoadmapLab({ chatId }: Props) {
 					updatedAt: Date.now(),
 					pendingRoadmap: {
 						mode: payload.mode,
-						config: payload.roadmap.config,
-						phases: hydratePhases(payload.roadmap.phases),
+						config: roadmap.config,
+						phases: hydratePhases(roadmap.phases),
 						message: payload.assistantMessage,
 					},
 				}));
@@ -498,6 +501,15 @@ export default function RoadmapLab({ chatId }: Props) {
 	}
 
 	function handleSubmit(event: FormEvent<HTMLFormElement>) {
+		event.preventDefault();
+		void submitPrompt(draft);
+	}
+
+	function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+		if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) {
+			return;
+		}
+
 		event.preventDefault();
 		void submitPrompt(draft);
 	}
@@ -638,14 +650,6 @@ export default function RoadmapLab({ chatId }: Props) {
 				config: pendingRoadmap.config,
 				phases: pendingRoadmap.phases,
 			},
-			pendingRoadmap: null,
-		}));
-		setIsRoadmapOpen(false);
-	}
-
-	function discardPendingRoadmap() {
-		updateActiveSession((current) => ({
-			...current,
 			pendingRoadmap: null,
 		}));
 		setIsRoadmapOpen(false);
@@ -811,6 +815,7 @@ export default function RoadmapLab({ chatId }: Props) {
 								id={composerId}
 								value={draft}
 								onChange={(event) => setDraft(event.target.value)}
+								onKeyDown={handleComposerKeyDown}
 								placeholder='Example: Build me a beginner roadmap for data analysis in 10 weeks, then make it project-heavy.'
 								rows={4}
 							/>
@@ -872,16 +877,9 @@ export default function RoadmapLab({ chatId }: Props) {
 							<div className='roadmap-header-actions'>
 								{showingPreview ? (
 									<div className='preview-actions'>
-										<button
-											className='secondary-button'
-											onClick={discardPendingRoadmap}
-											type='button'
-										>
-											Keep chatting
-										</button>
 										<button className='primary-button' onClick={applyPendingRoadmap} type='button'>
 											{pendingRoadmap.mode === 'create_roadmap'
-												? 'Create roadmap'
+												? 'Confirm roadmap'
 												: 'Apply changes'}
 										</button>
 									</div>

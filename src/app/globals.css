@@ -1328,7 +1328,6 @@ button {
 	}
 
 	.preview-actions {
-		width: 100%;
 		overflow-x: auto;
 		justify-content: flex-start;
 		padding-bottom: 2px;
